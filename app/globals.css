@@ -57,7 +57,7 @@
 }
 
 html, body {
-  height: 100vh;
+  height: 100dvh;
   width: 100vw;
   overflow: hidden;
   background-color: var(--bg-base);
@@ -89,7 +89,7 @@ button {
 
 .app-container {
   display: flex;
-  height: 100vh;
+  height: 100dvh;
   width: 100vw;
 }
 
@@ -316,6 +316,8 @@ button {
 
 .main-content {
   flex: 1;
+  min-height: 0;
+  min-width: 0;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -326,7 +328,8 @@ button {
   max-width: 760px;
   width: 100%;
   margin: 0 auto;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   padding: 40px;
@@ -335,6 +338,7 @@ button {
 /* Header */
 .fc-header {
   display: flex;
+  flex-shrink: 0;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 40px;
@@ -384,6 +388,7 @@ button {
 /* Body / Content */
 .fc-body {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -552,6 +557,7 @@ button {
   padding-top: 24px;
   border-top: 1px solid var(--border-subtle);
   display: flex;
+  flex-shrink: 0;
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
@@ -697,7 +703,7 @@ button {
     position: fixed;
     top: 0;
     left: -320px;
-    height: 100vh;
+    height: 100dvh;
     z-index: 50;
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -721,7 +727,8 @@ button {
   }
 
   .main-content {
-    height: calc(100vh - 60px); /* Account for mobile header */
+    flex: 1;
+    min-height: 0;
   }
 
   .flashcard-wrapper {
