@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { trioData } from "../lib/trios-data";
 
 const STATUS_ORDER = ["new", "review", "known"];
-const STEP_ORDER = ["theme", "argument", "works"];
+const STEP_ORDER = ["theme", "argument", "work-0", "work-1", "work-2", "recap"];
 
 const FILTERS = [
   { key: "all", label: "Tous" },
@@ -287,10 +287,34 @@ export default function Page() {
                 </div>
               )}
 
-              {/* Step: Works */}
-              {step === "works" && (
-                <div key="works" className="content-stage works-grid">
-                  <span className="label-sup">Citations</span>
+              {/* Step: Works individual */}
+              {step.startsWith("work-") && (
+                <div key={step} className="content-stage works-grid">
+                  <span className="label-sup">Œuvre {parseInt(step.split("-")[1]) + 1} / 3</span>
+                  {(() => {
+                    const work = current.works[parseInt(step.split("-")[1])];
+                    return (
+                      <div className="work-card">
+                        <div className="work-header">
+                          <div>
+                            <h3 className="work-title">{work.name}</h3>
+                            <span className="work-page">{work.page}</span>
+                          </div>
+                        </div>
+                        <p className="work-idea">{work.idea}</p>
+                        <blockquote className="work-quote">
+                          {work.quote}
+                        </blockquote>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Step: Recap */}
+              {step === "recap" && (
+                <div key="recap" className="content-stage works-grid">
+                  <span className="label-sup">Récapitulatif</span>
                   {current.works.map((work) => {
                     const isRevealed = revealedWorks.includes(work.name);
                     return (
@@ -341,7 +365,7 @@ export default function Page() {
                 ))}
               </div>
 
-              {step === "works" ? (
+              {step === "recap" ? (
                 <div className="actions-row">
                   <button className="primary-action outline" onClick={revealAllQuotes}>
                     Tout révéler
