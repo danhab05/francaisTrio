@@ -634,3 +634,147 @@ button {
   font-size: 15px;
   color: var(--text-tertiary);
 }
+
+/* -------------------------------------------------------------------------- */
+/* RESPONSIVE & MOBILE                                                        */
+/* -------------------------------------------------------------------------- */
+
+.mobile-header {
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.menu-btn {
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.close-sidebar-btn {
+  display: none;
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 40;
+  backdrop-filter: blur(2px);
+}
+
+.actions-row {
+  display: flex;
+  gap: 12px;
+}
+
+
+@media (max-width: 800px) {
+  .app-container {
+    flex-direction: column;
+  }
+  
+  .mobile-header {
+    display: flex;
+  }
+  
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -320px;
+    height: 100vh;
+    z-index: 50;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .sidebar.open {
+    transform: translateX(320px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .sidebar-overlay {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .hide-on-mobile {
+    display: none !important;
+  }
+  
+  .close-sidebar-btn {
+    display: block;
+  }
+
+  .main-content {
+    height: calc(100vh - 60px); /* Account for mobile header */
+  }
+
+  .flashcard-wrapper {
+    padding: 24px 20px;
+  }
+  
+  .fc-header {
+    margin-bottom: 24px;
+  }
+
+  .typography-serif {
+    font-size: clamp(24px, 6vw, 32px);
+  }
+
+  .fc-footer {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .status-selector {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .status-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 12px 8px;
+  }
+
+  .actions-row {
+    width: 100%;
+    flex-direction: column;
+  }
+  
+  .actions-row > button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .primary-action {
+    justify-content: center;
+    padding: 12px 24px;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (max-width: 800px) {
+  .full-width {
+    width: 100%;
+    justify-content: center;
+  }
+}

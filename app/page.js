@@ -27,15 +27,19 @@ export default function Page() {
   const [search, setSearch] = useState("");
   const [revealedWorks, setRevealedWorks] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/statuses")
-      .then((response) => response.json())
-      .then((data) => {
-        setStatuses(data.statuses || {});
-        setIsLoaded(true);
-      })
-      .catch(() => setIsLoaded(true));
+    // Load state from localStorage client-side
+    const saved = localStorage.getItem("trio_statuses");
+    if (saved) {
+      try {
+        setStatuses(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse statuses", e);
+      }
+    }
+    setIsLoaded(true);
   }, []);
 
   const enrichedTrios = useMemo(
@@ -94,18 +98,16 @@ export default function Page() {
   const progress = Math.round((counts.known / trioData.length) * 100);
 
   function updateStatus(id, nextStatus) {
-    setStatuses((prev) => ({ ...prev, [id]: nextStatus }));
-    fetch(`/api/statuses/${id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: nextStatus })
-    }).catch(() => null);
+    const newStatuses = { ...statuses, [id]: nextStatus };
+    setStatuses(newStatuses);
+    localStorage.setItem("trio_statuses", JSON.stringify(newStatuses));
   }
 
   function openTrio(id) {
     setSelectedId(id);
     setStep("theme");
     setRevealedWorks([]);
+    setIsSidebarOpen(false); // Close sidebar on mobile after selection
   }
 
   function moveSelection(direction) {
@@ -132,20 +134,50 @@ export default function Page() {
   }
 
   function resetStatuses() {
-    setStatuses({});
-    fetch("/api/statuses", { method: "DELETE" }).catch(() => null);
+    if (confirm("Voulez-vous vraiment réinitialiser toute votre progression ?")) {
+      setStatuses({});
+      localStorage.removeItem("trio_statuses");
+    }
   }
+
+  // Prevent hydration mismatch by not rendering until localStorage is loaded
+  if (!isLoaded) return null;
 
   return (
     <div className="app-container">
+      {/* MOBILE HEADER */}
+      <div className="mobile-header">
+        <h1 className="logo">La Nature <span>Sprint</span></h1>
+        <button className="menu-btn" onClick={() => setIsSidebarOpen(true)}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      {/* OVERLAY FOR MOBILE SIDEBAR */}
+      {isSidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />
+      )}
+
       {/* SIDEBAR */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
           <div className="logo-area">
-            <h1 className="logo">La Nature <span>Sprint</span></h1>
-            <button className="reset-btn" onClick={resetStatuses} title="Réinitialiser">
-              Reset
-            </button>
+            <h1 className="logo hide-on-mobile">La Nature <span>Sprint</span></h1>
+            <div className="sidebar-actions">
+              <button className="reset-btn" onClick={resetStatuses} title="Réinitialiser">
+                Reset
+              </button>
+              <button className="close-sidebar-btn" onClick={() => setIsSidebarOpen(false)}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
           </div>
           
           <div className="global-progress">
@@ -165,7 +197,7 @@ export default function Page() {
             className="search-input"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Rechercher par thème, auteur, citation..."
+            placeholder="Rechercher par thème, auteur..."
           />
         </div>
 
@@ -310,7 +342,7 @@ export default function Page() {
               </div>
 
               {step === "works" ? (
-                <div style={{ display: "flex", gap: "12px" }}>
+                <div className="actions-row">
                   <button className="primary-action outline" onClick={revealAllQuotes}>
                     Tout révéler
                   </button>
@@ -319,7 +351,7 @@ export default function Page() {
                   </button>
                 </div>
               ) : (
-                <button className="primary-action" onClick={advanceStep}>
+                <button className="primary-action full-width" onClick={advanceStep}>
                   Continuer →
                 </button>
               )}
