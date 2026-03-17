@@ -147,6 +147,10 @@ export default function Page() {
     setRevealedWorks([]);
   }
 
+  function exportAllTriosPdf() {
+    window.print();
+  }
+
   function resetStatuses() {
     if (confirm("Voulez-vous vraiment réinitialiser toute votre progression ?")) {
       setStatuses({});
@@ -199,41 +203,45 @@ export default function Page() {
   if (!isLoaded) return null;
 
   return (
-    <div className="app-container">
-      {/* MOBILE HEADER */}
-      <div className="mobile-header">
-        <h1 className="logo">La Nature <span>Sprint</span></h1>
-        <button className="menu-btn" onClick={() => setIsSidebarOpen(true)}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
-      </div>
+    <div className="page-shell">
+      <div className="app-container">
+        {/* MOBILE HEADER */}
+        <div className="mobile-header">
+          <h1 className="logo">La Nature <span>Sprint</span></h1>
+          <button className="menu-btn" onClick={() => setIsSidebarOpen(true)}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+        </div>
 
-      {/* OVERLAY FOR MOBILE SIDEBAR */}
-      {isSidebarOpen && (
-        <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />
-      )}
+        {/* OVERLAY FOR MOBILE SIDEBAR */}
+        {isSidebarOpen && (
+          <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />
+        )}
 
-      {/* SIDEBAR */}
-      <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
-        <div className="sidebar-header">
-          <div className="logo-area">
-            <h1 className="logo hide-on-mobile">La Nature <span>Sprint</span></h1>
-            <div className="sidebar-actions">
-              <button className="reset-btn" onClick={resetStatuses} title="Réinitialiser">
-                Reset
-              </button>
-              <button className="close-sidebar-btn" onClick={() => setIsSidebarOpen(false)}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
+        {/* SIDEBAR */}
+        <aside className={`sidebar ${isSidebarOpen ? "open" : ""}`}>
+          <div className="sidebar-header">
+            <div className="logo-area">
+              <h1 className="logo hide-on-mobile">La Nature <span>Sprint</span></h1>
+              <div className="sidebar-actions">
+                <button className="export-btn" onClick={exportAllTriosPdf} title="Exporter tous les trios en PDF">
+                  Export PDF
+                </button>
+                <button className="reset-btn" onClick={resetStatuses} title="Réinitialiser">
+                  Reset
+                </button>
+                <button className="close-sidebar-btn" onClick={() => setIsSidebarOpen(false)}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
             </div>
-          </div>
           
           <div className="global-progress">
             <div className="progress-labels">
@@ -244,9 +252,9 @@ export default function Page() {
               <div className="progress-fill" style={{ width: `${progress}%` }} />
             </div>
           </div>
-        </div>
+          </div>
 
-        <div className="sidebar-search">
+          <div className="sidebar-search">
           <input
             type="search"
             className="search-input"
@@ -254,9 +262,9 @@ export default function Page() {
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Rechercher par thème, auteur..."
           />
-        </div>
+          </div>
 
-        <div className="sidebar-filters">
+          <div className="sidebar-filters">
           {FILTERS.map((filter) => (
             <button
               key={filter.key}
@@ -267,9 +275,9 @@ export default function Page() {
               {filter.label}
             </button>
           ))}
-        </div>
+          </div>
 
-        <div className="sidebar-list">
+          <div className="sidebar-list">
           {filteredTrios.map((trio) => (
             <button
               key={trio.id}
@@ -284,11 +292,11 @@ export default function Page() {
               <span className={`status-dot ${trio.status}`} />
             </button>
           ))}
-        </div>
-      </aside>
+          </div>
+        </aside>
 
-      {/* MAIN CONTENT */}
-      <main className="main-content">
+        {/* MAIN CONTENT */}
+        <main className="main-content">
         {current ? (
           <div className="flashcard-wrapper">
             {/* Header */}
@@ -444,7 +452,43 @@ export default function Page() {
             <p>Aucun trio trouvé pour cette recherche.</p>
           </div>
         )}
-      </main>
+        </main>
+      </div>
+
+      <section className="pdf-export" aria-hidden="true">
+        <div className="pdf-cover">
+          <span className="pdf-kicker">Revision CPGE</span>
+          <h1>La Nature Sprint</h1>
+          <p>
+            Recueil complet des 9 trios sur le theme de la nature : arguments, citations et reperes
+            de lecture pour Verne, Haushofer et Canguilhem.
+          </p>
+        </div>
+
+        {trioData.map((trio) => (
+          <article key={trio.id} className="pdf-trio">
+            <div className="pdf-trio-header">
+              <span className="pdf-trio-index">Trio {String(trio.id).padStart(2, "0")}</span>
+              <h2>{trio.theme}</h2>
+            </div>
+
+            <p className="pdf-argument">{trio.argument}</p>
+
+            <div className="pdf-works">
+              {trio.works.map((work) => (
+                <section key={`${trio.id}-${work.name}`} className="pdf-work-card">
+                  <div className="pdf-work-headline">
+                    <h3>{work.name}</h3>
+                    <span>{work.page}</span>
+                  </div>
+                  <p className="pdf-work-idea">{work.idea}</p>
+                  <blockquote>{work.quote}</blockquote>
+                </section>
+              ))}
+            </div>
+          </article>
+        ))}
+      </section>
     </div>
   );
 }
