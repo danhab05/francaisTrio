@@ -128,6 +128,15 @@ export default function Page() {
     moveSelection("next");
   }
 
+  function goBackStep() {
+    const index = STEP_ORDER.indexOf(step);
+    if (index > 0) {
+      setStep(STEP_ORDER[index - 1]);
+      return;
+    }
+    moveSelection("prev");
+  }
+
   function revealAllQuotes() {
     if (!current) return;
     setRevealedWorks(current.works.map((work) => work.name));
@@ -144,6 +153,47 @@ export default function Page() {
       localStorage.removeItem("trio_statuses");
     }
   }
+
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (window.innerWidth <= 800) return;
+
+      const target = event.target;
+      const isTypingField =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      if (isTypingField) return;
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        advanceStep();
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        goBackStep();
+        return;
+      }
+
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        moveSelection("prev");
+        return;
+      }
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        moveSelection("next");
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [step, filteredTrios, currentIndex]);
 
   // Prevent hydration mismatch by not rendering until localStorage is loaded
   if (!isLoaded) return null;
