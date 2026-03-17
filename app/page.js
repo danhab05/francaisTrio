@@ -133,6 +133,11 @@ export default function Page() {
     setRevealedWorks(current.works.map((work) => work.name));
   }
 
+  function restartCurrentTrio() {
+    setStep("theme");
+    setRevealedWorks([]);
+  }
+
   function resetStatuses() {
     if (confirm("Voulez-vous vraiment réinitialiser toute votre progression ?")) {
       setStatuses({});
@@ -367,6 +372,9 @@ export default function Page() {
 
               {step === "recap" ? (
                 <div className="actions-row">
+                  <button className="primary-action outline" onClick={restartCurrentTrio}>
+                    Redemarrer
+                  </button>
                   <button className="primary-action outline" onClick={revealAllQuotes}>
                     Tout révéler
                   </button>
