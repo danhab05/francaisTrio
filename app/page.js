@@ -307,7 +307,7 @@ export default function Page() {
         {/* MAIN CONTENT */}
         <main className="main-content">
         {current ? (
-          <div className="flashcard-wrapper">
+          <div className={`flashcard-wrapper ${step === "recap" ? "is-recap" : ""}`}>
             {/* Header */}
             <header className="fc-header">
               <div className="fc-meta">
@@ -385,7 +385,7 @@ export default function Page() {
 
               {/* Step: Recap */}
               {step === "recap" && (
-                <div key="recap" className="content-stage works-grid">
+                <div key="recap" className="content-stage works-grid recap-grid">
                   <span className="label-sup">Récapitulatif</span>
                   {current.works.map((work) => {
                     const isRevealed = revealedWorks.includes(work.name);
