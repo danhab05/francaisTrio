@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#1a1a1a"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" ry="112" fill="url(#g)"/>
+  <text x="50%" y="58%" text-anchor="middle" dominant-baseline="middle"
+        font-family="Newsreader, Georgia, 'Times New Roman', serif"
+        font-size="340" font-weight="500" fill="#EDEDED" letter-spacing="-10">N</text>
+  <circle cx="370" cy="395" r="12" fill="#10B981"/>
+</svg>

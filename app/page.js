@@ -159,6 +159,15 @@ export default function Page() {
   }
 
   useEffect(() => {
+    // When entering the recap step, auto-reveal all quotes so every citation is
+    // visible at once (particularly helpful on iPad landscape, where the 3
+    // cards fit in a single row without scrolling).
+    if (step === "recap" && current) {
+      setRevealedWorks(current.works.map((work) => work.name));
+    }
+  }, [step, current?.id]);
+
+  useEffect(() => {
     function handleKeyDown(event) {
       if (window.innerWidth <= 800) return;
 
