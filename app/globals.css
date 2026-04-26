@@ -65,6 +65,18 @@ html, body {
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Disable iOS rubber-band scroll + text zoom when added to home screen */
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+/* Safe-area insets when installed as a PWA (iPhone / iPad standalone) */
+.app-container {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 button, input {
@@ -712,6 +724,104 @@ button {
 .actions-row {
   display: flex;
   gap: 12px;
+}
+
+
+/* -------------------------------------------------------------------------- */
+/* TABLET LANDSCAPE (iPad) : show all quotes in one screen without scrolling  */
+/* -------------------------------------------------------------------------- */
+
+@media (min-width: 900px) and (orientation: landscape) and (pointer: coarse),
+       (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+
+  /* Let the flashcard take full width so 3 cards fit side by side */
+  .flashcard-wrapper {
+    max-width: 1180px;
+    padding: 24px 32px;
+  }
+
+  .fc-header {
+    margin-bottom: 16px;
+  }
+
+  .step-indicator {
+    margin-bottom: 18px;
+  }
+
+  .label-sup {
+    margin-bottom: 10px;
+  }
+
+  /* Shrink hero type on theme/argument steps so footer stays visible */
+  .typography-serif {
+    font-size: clamp(26px, 3.2vw, 38px);
+  }
+
+  /* RECAP step : 3 work-cards in a single row, no scroll */
+  .works-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    padding-bottom: 16px;
+    align-content: start;
+  }
+
+  /* Work card : denser, to fit 3 columns in landscape height */
+  .work-card {
+    padding: 16px;
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .work-header {
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+
+  .work-title {
+    font-size: 14px;
+    line-height: 1.25;
+  }
+
+  .work-page {
+    font-size: 12px;
+  }
+
+  .work-idea {
+    font-size: 13px;
+    line-height: 1.45;
+    margin-bottom: 12px;
+  }
+
+  .work-quote {
+    margin-top: 12px;
+    padding-top: 12px;
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .reveal-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  /* Footer stays compact so the 3 cards + footer all fit on screen */
+  .fc-footer {
+    padding-top: 14px;
+    gap: 12px;
+  }
+
+  .status-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .primary-action {
+    padding: 8px 18px;
+    font-size: 13px;
+  }
 }
 
 
