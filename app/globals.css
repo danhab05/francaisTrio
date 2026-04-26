@@ -339,6 +339,16 @@ button { cursor: pointer; }
   display: flex;
   flex-direction: column;
   padding: 36px 40px;
+  /* Smooth expansion when sidebar collapses */
+  transition: max-width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* When sidebar is hidden, let the content breathe across the full width */
+.sidebar-is-collapsed .flashcard-wrapper {
+  max-width: 960px;
+}
+.sidebar-is-collapsed .flashcard-wrapper.is-recap {
+  max-width: 1280px;
 }
 
 /* Header */
