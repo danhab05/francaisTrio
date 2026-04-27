@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { trioData } from "../lib/trios-data";
 
 const STATUS_ORDER = ["new", "review", "known"];
@@ -20,6 +21,7 @@ const STATUS_LABELS = {
 };
 
 export default function Page() {
+  const router = useRouter();
   const [statuses, setStatuses] = useState({});
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [selectedId, setSelectedId] = useState(trioData[0].id);
@@ -197,6 +199,9 @@ export default function Page() {
             <div className="logo-area">
               <h1 className="logo hide-on-mobile">La Nature <span>Sprint</span></h1>
               <div className="sidebar-actions">
+                <button className="learn-mode-btn" onClick={() => router.push("/learn")} title="Mode apprentissage">
+                  Apprendre
+                </button>
                 <button className="export-btn" onClick={exportAllTriosPdf} title="Exporter en PDF">
                   PDF
                 </button>
