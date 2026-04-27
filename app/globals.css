@@ -983,6 +983,9 @@ button { cursor: pointer; }
   margin-bottom: 14px;
   display: block;
 }
+.learn-tag.is-bonus {
+  color: var(--status-review);
+}
 
 .learn-theme {
   font-family: var(--font-serif);
