@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
 import { trioData } from "../../lib/trios-data";
 
@@ -15,24 +15,47 @@ function shuffle(arr) {
   return a;
 }
 
+/** Flatten trios into individual works: 9 × 3 = 27 cards. */
+function flattenWorks(trios) {
+  const items = [];
+  trios.forEach((trio) => {
+    trio.works.forEach((work) => {
+      items.push({
+        id:       `${trio.id}-${work.name}`,
+        trioId:   trio.id,
+        theme:    trio.theme,
+        argument: trio.argument,
+        name:     work.name,
+        page:     work.page,
+        idea:     work.idea,
+        quote:    work.quote,
+      });
+    });
+  });
+  return items;
+}
+
 /* ─── constants ───────────────────────────────────────────────────────────── */
 
-// phases within a single card
-const PHASE = {
-  THEME:  "theme",   // show theme + argument, hide works
-  WORKS:  "works",   // show works, reveal quotes individually
-  SCORE:  "score",   // user grades themselves
-};
+const MODE = { TRIO: "trio", WORK: "work" };
+
+// phases within a trio-mode card (work-mode has no phases, only reveal)
+const PHASE = { THEME: "theme", WORKS: "works" };
 
 /* ─── reducer ─────────────────────────────────────────────────────────────── */
 
-function init(trios) {
+function makeQueue(mode) {
+  return mode === MODE.WORK ? shuffle(flattenWorks(trioData)) : shuffle(trioData);
+}
+
+function init({ mode }) {
   return {
-    queue:    shuffle(trios),     // randomised list to go through
-    index:    0,                  // current position in queue
+    mode,
+    queue:    makeQueue(mode),
+    index:    0,
     phase:    PHASE.THEME,
-    revealed: [],                 // work names whose quote is revealed
-    results:  {},                 // id → "known" | "review"
+    revealed: [],     // trio-mode: work names ; work-mode: bool via "revealed[0]"
+    results:  {},     // item id → "known" | "review"
     done:     false,
   };
 }
@@ -40,8 +63,15 @@ function init(trios) {
 function reducer(state, action) {
   switch (action.type) {
 
+    case "SET_MODE":
+      return init({ mode: action.mode });
+
     case "SHOW_WORKS":
       return { ...state, phase: PHASE.WORKS };
+
+    case "TOGGLE_REVEAL_WORK":
+      // work-mode: simple boolean toggle
+      return { ...state, revealed: state.revealed.length ? [] : ["revealed"] };
 
     case "TOGGLE_REVEAL": {
       const name = action.name;
@@ -52,13 +82,15 @@ function reducer(state, action) {
     }
 
     case "REVEAL_ALL": {
-      const all = state.queue[state.index].works.map((w) => w.name);
+      const cur = state.queue[state.index];
+      const all = cur.works ? cur.works.map((w) => w.name) : [];
       return { ...state, revealed: all };
     }
 
     case "GRADE": {
-      const trio = state.queue[state.index];
-      const results = { ...state.results, [trio.id]: action.grade };
+      const item = state.queue[state.index];
+      const key  = state.mode === MODE.WORK ? item.id : item.id; // same shape, key stays item.id
+      const results = { ...state.results, [key]: action.grade };
       const nextIndex = state.index + 1;
       const done = nextIndex >= state.queue.length;
       return {
@@ -72,7 +104,7 @@ function reducer(state, action) {
     }
 
     case "RESTART":
-      return init(trios);
+      return init({ mode: state.mode });
 
     default:
       return state;
@@ -87,7 +119,6 @@ const EyeIcon = () => (
     <circle cx="12" cy="12" r="3"/>
   </svg>
 );
-
 const EyeOffIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
@@ -100,16 +131,29 @@ const EyeOffIcon = () => (
 
 export default function LearnPage() {
   const router = useRouter();
-  const [state, dispatch] = useReducer(reducer, trioData, init);
+  const [state, dispatch] = useReducer(reducer, { mode: MODE.TRIO }, init);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect(() => { setIsLoaded(true); }, []);
+  // Remember last chosen mode
+  useEffect(() => {
+    const saved = localStorage.getItem("learn_mode");
+    if (saved === MODE.WORK || saved === MODE.TRIO) {
+      dispatch({ type: "SET_MODE", mode: saved });
+    }
+    setIsLoaded(true);
+  }, []);
+
+  function changeMode(mode) {
+    localStorage.setItem("learn_mode", mode);
+    dispatch({ type: "SET_MODE", mode });
+  }
+
   if (!isLoaded) return null;
 
-  const { queue, index, phase, revealed, results, done } = state;
-  const trio    = queue[index];
-  const total   = queue.length;
-  const current = index + 1;
+  const { mode, queue, index, phase, revealed, results, done } = state;
+  const total    = queue.length;
+  const current  = index + 1;
+  const item     = queue[index];
 
   const knownCount  = Object.values(results).filter((v) => v === "known").length;
   const reviewCount = Object.values(results).filter((v) => v === "review").length;
@@ -117,47 +161,60 @@ export default function LearnPage() {
   /* ── DONE screen ──────────────────────────────────────────────────────── */
   if (done) {
     const pct = Math.round((knownCount / total) * 100);
-    // collect trios to review
-    const toReview = trioData.filter((t) => results[t.id] === "review");
+
+    const toReview =
+      mode === MODE.TRIO
+        ? trioData.filter((t) => results[t.id] === "review")
+        : flattenWorks(trioData).filter((w) => results[w.id] === "review");
 
     return (
       <div className="learn-shell">
-        <div className="learn-done">
-          <span className="learn-kicker">Session terminée</span>
-          <h1 className="learn-done-score">{knownCount}<span>/{total}</span></h1>
-          <p className="learn-done-label">connus de tête</p>
+        <main className="learn-main">
+          <div className="learn-done">
+            <span className="learn-kicker">Session terminée</span>
+            <h1 className="learn-done-score">{knownCount}<span>/{total}</span></h1>
+            <p className="learn-done-label">
+              {mode === MODE.WORK ? "citations sues" : "trios sus"}
+            </p>
 
-          <div className="learn-done-bar">
-            <div className="learn-done-bar-fill" style={{ width: `${pct}%` }} />
-          </div>
-
-          {toReview.length > 0 && (
-            <div className="learn-review-list">
-              <p className="learn-review-title">À retravailler :</p>
-              {toReview.map((t) => (
-                <div key={t.id} className="learn-review-item">
-                  <span className="learn-review-num">{String(t.id).padStart(2, "0")}</span>
-                  <span className="learn-review-theme">{t.theme}</span>
-                </div>
-              ))}
+            <div className="learn-done-bar">
+              <div className="learn-done-bar-fill" style={{ width: `${pct}%` }} />
             </div>
-          )}
 
-          <div className="learn-done-actions">
-            <button className="learn-btn-primary" onClick={() => dispatch({ type: "RESTART" })}>
-              Recommencer
-            </button>
-            <button className="learn-btn-outline" onClick={() => router.push("/")}>
-              Retour révision
-            </button>
+            {toReview.length > 0 && (
+              <div className="learn-review-list">
+                <p className="learn-review-title">À retravailler :</p>
+                {toReview.map((t) => (
+                  <div key={t.id || `${t.trioId}-${t.name}`} className="learn-review-item">
+                    <span className="learn-review-num">
+                      {String(t.id || t.trioId).padStart(2, "0")}
+                    </span>
+                    <span className="learn-review-theme">
+                      {mode === MODE.WORK ? `${t.name} — ${t.theme}` : t.theme}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="learn-done-actions">
+              <button className="learn-btn-primary" onClick={() => dispatch({ type: "RESTART" })}>
+                Recommencer
+              </button>
+              <button className="learn-btn-outline" onClick={() => router.push("/")}>
+                Retour révision
+              </button>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
 
-  /* ── MAIN card ────────────────────────────────────────────────────────── */
+  /* ── card renderer ──────────────────────────────────────────────────── */
   const progress = ((current - 1) / total) * 100;
+  const isWorkMode = mode === MODE.WORK;
+  const isQuoteRevealed = isWorkMode && revealed.length > 0;
 
   return (
     <div className="learn-shell">
@@ -167,7 +224,7 @@ export default function LearnPage() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
-          Révision
+          <span className="learn-back-label">Révision</span>
         </button>
 
         <div className="learn-progress-wrap">
@@ -183,18 +240,38 @@ export default function LearnPage() {
         </div>
       </header>
 
-      {/* card */}
-      <main className="learn-main">
-        <div className="learn-card" key={trio.id + phase}>
+      {/* mode switcher */}
+      <div className="learn-mode-switch">
+        <button
+          className={`learn-mode-tab ${mode === MODE.TRIO ? "active" : ""}`}
+          onClick={() => changeMode(MODE.TRIO)}
+        >
+          Par trio
+          <span>9 cartes</span>
+        </button>
+        <button
+          className={`learn-mode-tab ${mode === MODE.WORK ? "active" : ""}`}
+          onClick={() => changeMode(MODE.WORK)}
+        >
+          Par œuvre
+          <span>27 cartes</span>
+        </button>
+      </div>
 
-          {/* ── phase THEME ─────────────────────────────────────────── */}
-          {phase === PHASE.THEME && (
+      {/* main scroll area */}
+      <main className="learn-main">
+        <div className="learn-card" key={`${mode}-${item.id}-${phase}`}>
+
+          {/* ───── TRIO MODE ───────────────────────────────────────────── */}
+          {mode === MODE.TRIO && phase === PHASE.THEME && (
             <>
               <div className="learn-card-body">
-                <span className="learn-tag">Trio {String(trio.id).padStart(2, "0")} · Thème</span>
-                <h2 className="learn-theme">{trio.theme}</h2>
+                <span className="learn-tag">
+                  Trio {String(item.id).padStart(2, "0")} · Thème
+                </span>
+                <h2 className="learn-theme">{item.theme}</h2>
                 <div className="learn-divider" />
-                <p className="learn-argument">{trio.argument}</p>
+                <p className="learn-argument">{item.argument}</p>
                 <p className="learn-hint">Retrouve les 3 œuvres et leurs citations…</p>
               </div>
               <div className="learn-card-footer">
@@ -208,16 +285,17 @@ export default function LearnPage() {
             </>
           )}
 
-          {/* ── phase WORKS ─────────────────────────────────────────── */}
-          {phase === PHASE.WORKS && (
+          {mode === MODE.TRIO && phase === PHASE.WORKS && (
             <>
               <div className="learn-card-body">
-                <span className="learn-tag">Trio {String(trio.id).padStart(2, "0")} · Œuvres</span>
-                <h2 className="learn-theme learn-theme-sm">{trio.theme}</h2>
+                <span className="learn-tag">
+                  Trio {String(item.id).padStart(2, "0")} · Œuvres
+                </span>
+                <h2 className="learn-theme learn-theme-sm">{item.theme}</h2>
 
                 <div className="learn-works">
-                  {trio.works.map((work) => {
-                    const isRevealed = revealed.includes(work.name);
+                  {item.works.map((work) => {
+                    const isR = revealed.includes(work.name);
                     return (
                       <div key={work.name} className="learn-work-card">
                         <div className="learn-work-head">
@@ -228,18 +306,13 @@ export default function LearnPage() {
                           <button
                             className="learn-reveal-btn"
                             onClick={() => dispatch({ type: "TOGGLE_REVEAL", name: work.name })}
-                            aria-label={isRevealed ? "Masquer la citation" : "Révéler la citation"}
                           >
-                            {isRevealed ? <EyeOffIcon /> : <EyeIcon />}
-                            {isRevealed ? "Masquer" : "Citation"}
+                            {isR ? <EyeOffIcon /> : <EyeIcon />}
+                            {isR ? "Masquer" : "Citation"}
                           </button>
                         </div>
                         <p className="learn-work-idea">{work.idea}</p>
-                        {isRevealed && (
-                          <blockquote className="learn-work-quote">
-                            {work.quote}
-                          </blockquote>
-                        )}
+                        {isR && <blockquote className="learn-work-quote">{work.quote}</blockquote>}
                       </div>
                     );
                   })}
@@ -247,7 +320,7 @@ export default function LearnPage() {
               </div>
 
               <div className="learn-card-footer">
-                {revealed.length < trio.works.length && (
+                {revealed.length < item.works.length && (
                   <button
                     className="learn-btn-outline"
                     onClick={() => dispatch({ type: "REVEAL_ALL" })}
@@ -267,6 +340,63 @@ export default function LearnPage() {
                 >
                   À revoir ↺
                 </button>
+              </div>
+            </>
+          )}
+
+          {/* ───── WORK MODE ───────────────────────────────────────────── */}
+          {isWorkMode && (
+            <>
+              <div className="learn-card-body">
+                <span className="learn-tag">
+                  Trio {String(item.trioId).padStart(2, "0")} · {item.name}
+                </span>
+                <h2 className="learn-theme learn-theme-sm">{item.theme}</h2>
+
+                <div className="learn-work-card learn-work-card-solo">
+                  <div className="learn-work-head">
+                    <div>
+                      <span className="learn-work-name">{item.name}</span>
+                      <span className="learn-work-page">{item.page}</span>
+                    </div>
+                  </div>
+                  <p className="learn-work-idea">{item.idea}</p>
+
+                  {isQuoteRevealed ? (
+                    <blockquote className="learn-work-quote">{item.quote}</blockquote>
+                  ) : (
+                    <div className="learn-quote-placeholder">
+                      <span>Citation masquée</span>
+                      <p>Retrouve-la de tête…</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="learn-card-footer">
+                {!isQuoteRevealed ? (
+                  <button
+                    className="learn-btn-primary full"
+                    onClick={() => dispatch({ type: "TOGGLE_REVEAL_WORK" })}
+                  >
+                    <EyeIcon /> Révéler la citation
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      className="learn-btn-primary"
+                      onClick={() => dispatch({ type: "GRADE", grade: "known" })}
+                    >
+                      Je savais ✓
+                    </button>
+                    <button
+                      className="learn-btn-review"
+                      onClick={() => dispatch({ type: "GRADE", grade: "review" })}
+                    >
+                      À revoir ↺
+                    </button>
+                  </>
+                )}
               </div>
             </>
           )}
