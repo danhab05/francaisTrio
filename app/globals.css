@@ -1190,6 +1190,38 @@ button { cursor: pointer; }
 }
 .learn-mode-tab.active span { color: rgba(0,0,0,0.55); }
 
+/* ── author filter (work-mode only) ──────────────────────────────────────── */
+
+.learn-author-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  padding: 10px 20px 0;
+  flex-shrink: 0;
+}
+
+.learn-author-chip {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  min-height: 32px;
+  transition: all 0.15s;
+}
+.learn-author-chip:hover {
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+}
+.learn-author-chip.active {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
 /* ── work-mode placeholder ───────────────────────────────────────────────── */
 
 .learn-work-card-solo { padding: 20px 22px; }
@@ -1213,9 +1245,9 @@ button { cursor: pointer; }
 }
 .learn-quote-placeholder p {
   font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 14px;
-  color: var(--text-secondary);
+  font-size: clamp(16px, 2.4vw, 20px);
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
 }
 
 /* ── done screen ─────────────────────────────────────────────────────────── */
@@ -1326,6 +1358,9 @@ button { cursor: pointer; }
   .learn-mode-switch { padding: 10px 12px 0; gap: 6px; }
   .learn-mode-tab    { padding: 7px 14px; font-size: 12px; }
   .learn-mode-tab span { font-size: 9px; }
+
+  .learn-author-filter { padding: 8px 12px 0; gap: 5px; }
+  .learn-author-chip   { padding: 5px 11px; font-size: 11px; min-height: 28px; }
 
   .learn-main { padding: 14px 12px calc(32px + env(safe-area-inset-bottom)); }
 

@@ -16,10 +16,11 @@ function shuffle(arr) {
 }
 
 /** Flatten trios into individual works: 9 × 3 = 27 cards. */
-function flattenWorks(trios) {
+function flattenWorks(trios, author = "all") {
   const items = [];
   trios.forEach((trio) => {
     trio.works.forEach((work) => {
+      if (author !== "all" && work.name !== author) return;
       items.push({
         id:       `${trio.id}-${work.name}`,
         trioId:   trio.id,
@@ -35,23 +36,39 @@ function flattenWorks(trios) {
   return items;
 }
 
+/** Extract the first N words of a quote, stripping guillemets. */
+function firstWords(quote, n = 2) {
+  if (!quote) return "";
+  // remove « » and leading/trailing punctuation, take first n tokens
+  const cleaned = quote
+    .replace(/^[«"\s]+/, "")
+    .replace(/[»"\s]+$/, "")
+    .trim();
+  const words = cleaned.split(/\s+/).slice(0, n);
+  return words.join(" ");
+}
+
 /* ─── constants ───────────────────────────────────────────────────────────── */
 
-const MODE = { TRIO: "trio", WORK: "work" };
+const MODE    = { TRIO: "trio", WORK: "work" };
+const AUTHORS = ["all", "Verne", "Haushofer", "Canguilhem"];
 
 // phases within a trio-mode card (work-mode has no phases, only reveal)
 const PHASE = { THEME: "theme", WORKS: "works" };
 
 /* ─── reducer ─────────────────────────────────────────────────────────────── */
 
-function makeQueue(mode) {
-  return mode === MODE.WORK ? shuffle(flattenWorks(trioData)) : shuffle(trioData);
+function makeQueue(mode, author) {
+  return mode === MODE.WORK
+    ? shuffle(flattenWorks(trioData, author))
+    : shuffle(trioData);
 }
 
-function init({ mode }) {
+function init({ mode, author = "all" }) {
   return {
     mode,
-    queue:    makeQueue(mode),
+    author,
+    queue:    makeQueue(mode, author),
     index:    0,
     phase:    PHASE.THEME,
     revealed: [],     // trio-mode: work names ; work-mode: bool via "revealed[0]"
@@ -64,7 +81,10 @@ function reducer(state, action) {
   switch (action.type) {
 
     case "SET_MODE":
-      return init({ mode: action.mode });
+      return init({ mode: action.mode, author: state.author });
+
+    case "SET_AUTHOR":
+      return init({ mode: state.mode, author: action.author });
 
     case "SHOW_WORKS":
       return { ...state, phase: PHASE.WORKS };
@@ -89,8 +109,7 @@ function reducer(state, action) {
 
     case "GRADE": {
       const item = state.queue[state.index];
-      const key  = state.mode === MODE.WORK ? item.id : item.id; // same shape, key stays item.id
-      const results = { ...state.results, [key]: action.grade };
+      const results = { ...state.results, [item.id]: action.grade };
       const nextIndex = state.index + 1;
       const done = nextIndex >= state.queue.length;
       return {
@@ -104,7 +123,7 @@ function reducer(state, action) {
     }
 
     case "RESTART":
-      return init({ mode: state.mode });
+      return init({ mode: state.mode, author: state.author });
 
     default:
       return state;
@@ -131,14 +150,23 @@ const EyeOffIcon = () => (
 
 export default function LearnPage() {
   const router = useRouter();
-  const [state, dispatch] = useReducer(reducer, { mode: MODE.TRIO }, init);
+  const [state, dispatch] = useReducer(
+    reducer,
+    { mode: MODE.TRIO, author: "all" },
+    init
+  );
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Remember last chosen mode
+  // Remember last chosen mode + author
   useEffect(() => {
-    const saved = localStorage.getItem("learn_mode");
-    if (saved === MODE.WORK || saved === MODE.TRIO) {
-      dispatch({ type: "SET_MODE", mode: saved });
+    const savedMode   = localStorage.getItem("learn_mode");
+    const savedAuthor = localStorage.getItem("learn_author");
+    const mode   = (savedMode === MODE.WORK || savedMode === MODE.TRIO) ? savedMode : MODE.TRIO;
+    const author = AUTHORS.includes(savedAuthor) ? savedAuthor : "all";
+    if (mode !== MODE.TRIO || author !== "all") {
+      // SET_MODE resets with author too; build init in one go
+      dispatch({ type: "SET_MODE", mode });
+      if (author !== "all") dispatch({ type: "SET_AUTHOR", author });
     }
     setIsLoaded(true);
   }, []);
@@ -148,9 +176,14 @@ export default function LearnPage() {
     dispatch({ type: "SET_MODE", mode });
   }
 
+  function changeAuthor(author) {
+    localStorage.setItem("learn_author", author);
+    dispatch({ type: "SET_AUTHOR", author });
+  }
+
   if (!isLoaded) return null;
 
-  const { mode, queue, index, phase, revealed, results, done } = state;
+  const { mode, author, queue, index, phase, revealed, results, done } = state;
   const total    = queue.length;
   const current  = index + 1;
   const item     = queue[index];
@@ -165,7 +198,7 @@ export default function LearnPage() {
     const toReview =
       mode === MODE.TRIO
         ? trioData.filter((t) => results[t.id] === "review")
-        : flattenWorks(trioData).filter((w) => results[w.id] === "review");
+        : flattenWorks(trioData, author).filter((w) => results[w.id] === "review");
 
     return (
       <div className="learn-shell">
@@ -254,9 +287,28 @@ export default function LearnPage() {
           onClick={() => changeMode(MODE.WORK)}
         >
           Par œuvre
-          <span>27 cartes</span>
+          <span>
+            {mode === MODE.WORK
+              ? `${total} carte${total > 1 ? "s" : ""}`
+              : "27 cartes"}
+          </span>
         </button>
       </div>
+
+      {/* author filter — work mode only */}
+      {mode === MODE.WORK && (
+        <div className="learn-author-filter">
+          {AUTHORS.map((a) => (
+            <button
+              key={a}
+              className={`learn-author-chip ${author === a ? "active" : ""}`}
+              onClick={() => changeAuthor(a)}
+            >
+              {a === "all" ? "Tous" : a}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* main scroll area */}
       <main className="learn-main">
@@ -366,8 +418,8 @@ export default function LearnPage() {
                     <blockquote className="learn-work-quote">{item.quote}</blockquote>
                   ) : (
                     <div className="learn-quote-placeholder">
-                      <span>Citation masquée</span>
-                      <p>Retrouve-la de tête…</p>
+                      <span>Indice · 2 premiers mots</span>
+                      <p>« {firstWords(item.quote, 2)}…&nbsp;»</p>
                     </div>
                   )}
                 </div>
