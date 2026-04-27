@@ -3,6 +3,7 @@
 import { useEffect, useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
 import { trioData } from "../../lib/trios-data";
+import { bonusQuotes } from "../../lib/bonus-quotes";
 
 /* ─── helpers ─────────────────────────────────────────────────────────────── */
 
@@ -15,7 +16,8 @@ function shuffle(arr) {
   return a;
 }
 
-/** Flatten trios into individual works: 9 × 3 = 27 cards. */
+/** Flatten trios into individual works, plus bonus standalone quotes.
+ *  Result count: 27 trio-works + N bonus = 27+N total (filtered by author). */
 function flattenWorks(trios, author = "all") {
   const items = [];
   trios.forEach((trio) => {
@@ -24,6 +26,7 @@ function flattenWorks(trios, author = "all") {
       items.push({
         id:       `${trio.id}-${work.name}`,
         trioId:   trio.id,
+        bonus:    false,
         theme:    trio.theme,
         argument: trio.argument,
         name:     work.name,
@@ -31,6 +34,21 @@ function flattenWorks(trios, author = "all") {
         idea:     work.idea,
         quote:    work.quote,
       });
+    });
+  });
+  // Append bonus quotes (no trio attached)
+  bonusQuotes.forEach((b) => {
+    if (author !== "all" && b.name !== author) return;
+    items.push({
+      id:       b.id,
+      trioId:   null,
+      bonus:    true,
+      theme:    null,
+      argument: null,
+      name:     b.name,
+      page:     b.page,
+      idea:     b.idea,
+      quote:    b.quote,
     });
   });
   return items;
@@ -217,16 +235,22 @@ export default function LearnPage() {
             {toReview.length > 0 && (
               <div className="learn-review-list">
                 <p className="learn-review-title">À retravailler :</p>
-                {toReview.map((t) => (
-                  <div key={t.id || `${t.trioId}-${t.name}`} className="learn-review-item">
-                    <span className="learn-review-num">
-                      {String(t.id || t.trioId).padStart(2, "0")}
-                    </span>
-                    <span className="learn-review-theme">
-                      {mode === MODE.WORK ? `${t.name} — ${t.theme}` : t.theme}
-                    </span>
-                  </div>
-                ))}
+                {toReview.map((t) => {
+                  const isBonus = t.bonus || typeof t.id === "string" && t.id.startsWith("bonus-");
+                  const num = isBonus
+                    ? "BN"
+                    : String(t.trioId || t.id).padStart(2, "0");
+                  const label =
+                    mode === MODE.WORK
+                      ? (isBonus ? `${t.name} — bonus` : `${t.name} — ${t.theme}`)
+                      : t.theme;
+                  return (
+                    <div key={t.id} className="learn-review-item">
+                      <span className="learn-review-num">{num}</span>
+                      <span className="learn-review-theme">{label}</span>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -400,16 +424,22 @@ export default function LearnPage() {
           {isWorkMode && (
             <>
               <div className="learn-card-body">
-                <span className="learn-tag">
-                  Trio {String(item.trioId).padStart(2, "0")} · {item.name}
+                <span className={`learn-tag ${item.bonus ? "is-bonus" : ""}`}>
+                  {item.bonus
+                    ? `Bonus · ${item.name}`
+                    : `Trio ${String(item.trioId).padStart(2, "0")} · ${item.name}`}
                 </span>
-                <h2 className="learn-theme learn-theme-sm">{item.theme}</h2>
+                {item.theme && (
+                  <h2 className="learn-theme learn-theme-sm">{item.theme}</h2>
+                )}
 
                 <div className="learn-work-card learn-work-card-solo">
                   <div className="learn-work-head">
                     <div>
                       <span className="learn-work-name">{item.name}</span>
-                      <span className="learn-work-page">{item.page}</span>
+                      {item.page && (
+                        <span className="learn-work-page">{item.page}</span>
+                      )}
                     </div>
                   </div>
                   <p className="learn-work-idea">{item.idea}</p>
