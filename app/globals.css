@@ -191,6 +191,18 @@ button { cursor: pointer; }
 }
 .export-btn:hover { background: var(--bg-surface-hover); border-color: var(--border-focus); }
 
+.learn-mode-btn {
+  color: var(--bg-base);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--text-primary);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.learn-mode-btn:hover { background: var(--accent-primary-hover, #E5E5E5); }
+
 /* Desktop collapse chevron button */
 .collapse-btn {
   width: 28px;
@@ -852,4 +864,411 @@ button { cursor: pointer; }
     padding-top: 4mm; border-top: 1px dashed #cbbca7;
     font-family: var(--font-serif); font-size: 15px; line-height: 1.7; color: #211b16;
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* LEARN MODE (/learn)                                                        */
+/* -------------------------------------------------------------------------- */
+
+.learn-shell {
+  min-height: 100dvh;
+  background: var(--bg-base);
+  display: flex;
+  flex-direction: column;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ── top bar ─────────────────────────────────────────────────────────────── */
+
+.learn-topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 24px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.learn-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+.learn-back:hover { color: var(--text-primary); }
+
+.learn-progress-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.learn-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--border-base);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.learn-progress-fill {
+  height: 100%;
+  background: var(--accent-brand);
+  border-radius: 2px;
+  transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.learn-counter {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.learn-session-score {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.learn-score-known  { font-size: 13px; font-weight: 600; color: var(--status-known); }
+.learn-score-review { font-size: 13px; font-weight: 600; color: var(--status-review); }
+
+/* ── main / card ─────────────────────────────────────────────────────────── */
+
+.learn-main {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px 20px 40px;
+  overflow-y: auto;
+}
+
+.learn-card {
+  width: 100%;
+  max-width: 700px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  animation: fade-in-up 0.18s ease-out;
+  overflow: hidden;
+}
+
+.learn-card-body {
+  padding: 32px 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.learn-tag {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-brand);
+  margin-bottom: 14px;
+  display: block;
+}
+
+.learn-theme {
+  font-family: var(--font-serif);
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+.learn-theme-sm {
+  font-size: clamp(16px, 2.2vw, 22px);
+  margin-bottom: 16px;
+}
+
+.learn-divider {
+  height: 1px;
+  background: var(--border-base);
+  margin: 4px 0 18px;
+}
+
+.learn-argument {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.learn-hint {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+/* works list */
+.learn-works {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.learn-work-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  transition: border-color 0.2s;
+}
+.learn-work-card:hover { border-color: var(--border-focus); }
+
+.learn-work-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.learn-work-name {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.learn-work-page {
+  display: block;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.learn-reveal-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  min-height: 32px;
+}
+.learn-reveal-btn:hover { color: var(--text-primary); border-color: var(--border-focus); }
+
+.learn-work-idea {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.learn-work-quote {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-base);
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--text-primary);
+  animation: fade-in 0.3s ease;
+}
+.learn-work-quote::before { content: "«"; color: var(--text-tertiary); margin-right: 4px; }
+.learn-work-quote::after  { content: "»"; color: var(--text-tertiary); margin-left: 4px; }
+
+/* ── card footer ─────────────────────────────────────────────────────────── */
+
+.learn-card-footer {
+  padding: 16px 32px 24px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.learn-btn-primary {
+  background: var(--text-primary);
+  color: var(--bg-base);
+  padding: 11px 22px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  white-space: nowrap;
+}
+.learn-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,255,255,0.12); }
+.learn-btn-primary.full  { width: 100%; justify-content: center; }
+
+.learn-btn-outline {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-focus);
+  padding: 11px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  min-height: 44px;
+  white-space: nowrap;
+}
+.learn-btn-outline:hover { color: var(--text-primary); background: var(--bg-surface); }
+
+.learn-btn-review {
+  background: var(--status-review-bg);
+  color: var(--status-review);
+  border: 1px solid rgba(245,158,11,0.3);
+  padding: 11px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+  min-height: 44px;
+  white-space: nowrap;
+}
+.learn-btn-review:hover { background: rgba(245,158,11,0.22); }
+
+/* ── done screen ─────────────────────────────────────────────────────────── */
+
+.learn-done {
+  margin: auto;
+  width: 100%;
+  max-width: 480px;
+  padding: 48px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0;
+  animation: fade-in-up 0.2s ease-out;
+}
+
+.learn-kicker {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  margin-bottom: 20px;
+}
+
+.learn-done-score {
+  font-family: var(--font-serif);
+  font-size: 80px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.learn-done-score span {
+  font-size: 40px;
+  color: var(--text-tertiary);
+}
+
+.learn-done-label {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.learn-done-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--border-base);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+.learn-done-bar-fill {
+  height: 100%;
+  background: var(--status-known);
+  border-radius: 3px;
+  transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.learn-review-list {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-base);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 32px;
+  text-align: left;
+}
+.learn-review-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--status-review);
+  margin-bottom: 12px;
+}
+.learn-review-item {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.learn-review-item:last-child { border-bottom: none; }
+.learn-review-num   { font-size: 11px; color: var(--text-tertiary); font-weight: 500; min-width: 18px; flex-shrink: 0; }
+.learn-review-theme { font-size: 13px; color: var(--text-secondary); line-height: 1.4; }
+
+.learn-done-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+.learn-done-actions .learn-btn-primary,
+.learn-done-actions .learn-btn-outline {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ── mobile ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 800px) {
+  .learn-topbar { padding: 12px 16px; gap: 10px; }
+  .learn-back   { font-size: 12px; }
+
+  .learn-main { padding: 16px 12px 32px; }
+
+  .learn-card-body   { padding: 24px 20px 18px; }
+  .learn-card-footer { padding: 14px 20px 20px; gap: 8px; }
+
+  .learn-theme    { font-size: clamp(18px, 5vw, 24px); margin-bottom: 14px; }
+  .learn-theme-sm { font-size: clamp(15px, 4vw, 18px); margin-bottom: 12px; }
+  .learn-argument { font-size: 14px; }
+
+  .learn-work-card { padding: 14px; }
+  .learn-work-name { font-size: 14px; }
+  .learn-work-quote { font-size: 15px; }
+
+  .learn-btn-primary,
+  .learn-btn-outline,
+  .learn-btn-review { font-size: 13px; padding: 10px 14px; }
+
+  .learn-done       { padding: 32px 20px; }
+  .learn-done-score { font-size: 64px; }
 }
